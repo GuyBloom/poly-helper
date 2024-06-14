@@ -1,4 +1,6 @@
 import pandas as pd
+from pandas import DataFrame
+import pickle
 import tiktoken
 import openai
 import numpy as np
@@ -10,162 +12,142 @@ import os
 from dotenv import load_dotenv, dotenv_values 
 
 load_dotenv()
+instructions_file = open('instructions.txt', 'r', encoding='utf-8')
+instructions = instructions_file.read()
+
 client = OpenAI(
     api_key = os.environ.get("OPENAI_API_KEY")
 )
 
-tokenizer = tiktoken.get_encoding("cl100k_base")
+df=pd.read_csv('embeddings.csv', index_col=0)
+df['embeddings'] = df['embeddings'].apply(eval).apply(np.array)
+with open('person_data.pkl', 'rb') as fp:
+    uncut_dict = pickle.load(fp)
 
-df = pd.read_csv('disctionary-of-cultural-and-criticaltheory.csv', index_col=0)
+df.head()
+def create_context(
+    question, df, max_len=1800, size="ada"
+):
+    """
+    Create a context for a question by finding the most similar context from the dataframe
+    """
 
-df.columns = ['text']
+    q_embeddings = client.embeddings.create(input=question, model='text-embedding-3-small').data[0].embedding
 
-df['n_tokens'] = df.text.apply(lambda x: len(tokenizer.encode(x)))
+    df['distances'] = distances_from_embeddings(q_embeddings, df['embeddings'].values, distance_metric='cosine')
+    interm_df = df.sort_values('distances', ascending=True, ignore_index = True)
+    top_names = []
+    top_dist = []
+    counter = 0
+    while(len(top_names)<10):
+        if(top_names.count(interm_df.loc[counter].at["Term"])==0):
+            top_names.append(interm_df.loc[counter].at["Term"])
+            top_dist.append(interm_df.loc[counter].at['distances'])
+        counter = counter + 1
+    info_compiled = {'Term': top_names, 'distances': top_dist}
+    topdf = pd.DataFrame(data = info_compiled)
+    topdf['Definition'] = topdf.Term.apply(lambda x: uncut_dict[x])
+    returns = []
+    cur_len = 0
 
-df.n_tokens.hist()
+    list_context = []
+    
+    for _, row in topdf.iterrows():
+        new_line = (row['Term'], row['Definition'], row['distances'])
+        list_context.append(new_line)
+    return (list_context)
 
-max_tokens = 500
+colorList = ["green", "red", "blue", "purple"]
+tester = "Type the first 8 numbers of the fibonacci statement, creating a newline between each number"
+def answer_question(
+    df,
+    model="gpt-4o",
+    question="Am I allowed to publish model outputs to Twitter, without a human review?",
+    max_len=5000,
+    size="ada",
+    debug=False,
+    max_tokens=3000,
+    stop_sequence=None
+):
+    """
+    Answer a question based on the most similar context from the dataframe texts
+    """
+    context = create_context(
+        question,
+        df,
+        max_len=max_len,
+        size=size,
+    )
 
-def split_into_many(text, max_tokens = max_tokens):
-
-    sentences = text.split('. ')
-
-    n_tokens = [len(tokenizer.encode(" " + sentence)) for sentence in sentences]
-
-    chunks = []
-    tokens_so_far = 0
-    chunk = []
-
-    for sentence, token in zip(sentences, n_tokens):
-
-
-        if tokens_so_far + token > max_tokens:
-            chunks.append(". ".join(chunk) + ".")
-            chunk = []
-            tokens_so_far = 0
-
-
-        if token > max_tokens:
-            continue
-
-        chunk.append(sentence)
-        tokens_so_far += token + 1
-
-    return chunks
-
-
-shortened = []
-
-for row in df.iterrows():
-
-    if row[1]['text'] is None:
-        continue
-
-    if row[1]['n_tokens'] > max_tokens:
-        shortened += split_into_many(row[1]['text'])
-
-    else:
-        shortened.append( row[1]['text'] )
-
-
-
-df = pd.DataFrame(shortened, columns = ['text'])
-df['n_tokens'] = df.text.apply(lambda x: len(tokenizer.encode(x)))
-df.n_tokens.hist()
-
-
-
-
-df['embeddings'] = df.text.apply(lambda x: client.embeddings.create(input=x, model='text-embedding-3-small').data[0].embedding)
-
-
-
-df.to_csv('embeddings.csv')
-# df.head()
-
-
-
-# df=pd.read_csv('embeddings.csv', index_col=0)
-# df['embeddings'] = df['embeddings'].apply(eval).apply(np.array)
-
-# df.head()
-
-
-# def create_context(
-#     question, df, max_len=1800, size="ada"
-# ):
-#     """
-#     Create a context for a question by finding the most similar context from the dataframe
-#     """
-
-#     q_embeddings = client.embeddings.create(input=question, model='text-embedding-3-small').data[0].embedding
-
-#     df['distances'] = distances_from_embeddings(q_embeddings, df['embeddings'].values, distance_metric='cosine')
-
-
-#     returns = []
-#     cur_len = 0
-
-#     for _, row in df.sort_values('distances', ascending=True).iterrows():
-
-#         cur_len += row['n_tokens'] + 4
-
-#         if cur_len > max_len:
-#             break
-
-#         returns.append(row["text"])
-
-#     return "\n\n###\n\n".join(returns)
-
-
-# def answer_question(
-#     df,
-#     model="gpt-3.5-turbo",
-#     question="Am I allowed to publish model outputs to Twitter, without a human review?",
-#     max_len=1800,
-#     size="ada",
-#     debug=False,
-#     max_tokens=150,
-#     stop_sequence=None
-# ):
-#     """
-#     Answer a question based on the most similar context from the dataframe texts
-#     """
-#     context = create_context(
-#         question,
-#         df,
-#         max_len=max_len,
-#         size=size,
-#     )
-#     if debug:
-#         print("Context:\n" + context)
-#         print("\n\n")
-
-#     try:
-#         response = client.chat.completions.create(
-#             model=model,
-#             messages=[
-#                 {"role": "system", "content": f"You are a confident Capital One virtual assistant with decades of training. Answer the questions with this context: {context}" },
-#                 {"role": "user", "content": question},
+    
+    if debug:
+        print("Context:\n")
+        print(context)
+        print("\n\n")
+    try:
+        response = client.chat.completions.create(
+            model=model,        
+            messages=[
+                {"role": "system", "content": (instructions + f"{context}") },
+                {"role": "user", "content": question},
                 
-#             ],
-#             temperature=0.7,
-#             max_tokens=max_tokens,
-#             top_p=1,
-#             frequency_penalty=0,
-#             presence_penalty=0,
-#             stop=stop_sequence,
-#         )
-#         return str(response.choices[0].message).strip()
-#     except Exception as e:
-#         print(e)
-#         return ""
+            ],
+            temperature=0.7,
+            seed=123,
+            max_tokens=max_tokens,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+            stop=stop_sequence,
+        )
+        return (str(response.choices[0].message.content).strip(), context)
+    except Exception as e:
+        print(e)
+        return ""
+def split_answer(answer, separator, context_list, debug = False):
+
+    init_list = answer.split('*')
+    paragraph = init_list.pop(0)
+    exp_list = []
+    init_list[0] = init_list[0].strip()
+    inter_list=init_list[0].splitlines()
+    for x in inter_list:
+        if(x!=''):
+            exp_list.append(x)
+    name_list = []
+    distance_list = []
+    for x in context_list:
+        name_list.append(x[0])
+        distance_list.append(x[2])
+    if(debug):
+        dict = {'name': name_list, 'distance': distance_list, 'expl': exp_list}
+        print('name_list length: ' + str(len(name_list)) + '\n')
+        print('distance_list length: ' + str(len(distance_list)) + '\n')
+        print('exp_list length: ' + str(len(exp_list)) + '\n')
+        for x in name_list:
+            print(x + '\n')
+        for x in distance_list:
+            print(str(x) + '\n')
+        for x in exp_list:
+            print(x + '\n')
+    final_df = pd.DataFrame(data = dict)
+    final_df['percent_match'] = final_df.distance.apply(lambda x: 100*round(1-float(x), 4))
+    if(debug):
+        print(paragraph)
+        print(final_df)
+        final_df.to_csv('final_test.csv')
+    return (paragraph, final_df)
+    
 
 
+    
+file = open('question.txt', 'r', encoding='utf-8')
+answer_raw = answer_question(df, question=file.read()                  
+, debug=True)
+answer = answer_raw[0]
+final_raw =split_answer(answer, '*', answer_raw[1], debug= True)
+print(final_raw[0])
+print(final_raw[1])
 
-
-
-# print(answer_question(df, question="What are you?", debug=False))
-# print(answer_question(df, question="How do I order checks online for my business?"))
-# print(answer_question(df, question="What happens when you file a dispute through Capital One?"))
-# print(answer_question(df, question="What makes Capital One unique?"))
+# answerlist = answer[1]
+# answerlist.to_csv('responses.csv')
