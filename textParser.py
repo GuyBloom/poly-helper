@@ -62,7 +62,8 @@ terms_and_definitions = parse_text_file(file_path)
 df = create_dataframe(terms_and_definitions)
 totalDictionary = dict(skibidi = 'biden')
 for _, row in df.iterrows():
-    totalDictionary[row['Term']] = [row['Definition']]
+    totalDictionary[row['Term']] = [row['Definition'][:5000]]
+    print(row['Term'] + '\n')
 with open('person_data.pkl', 'wb') as fp:
     pickle.dump(totalDictionary, fp)
     print('dictionary saved successfully to file')

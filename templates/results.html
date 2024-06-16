@@ -1,0 +1,30 @@
+<!doctype html>
+<head> 
+	<meta charset="UTF-8"> 
+	<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<title>Document</title> 
+</head> 
+<title>Hello from Flask</title>
+
+{% if paragraph %}
+<body>
+	Summary: <br>
+	<blockquote><p>
+	{{ paragraph }}
+</p>
+</blockquote>
+<br>
+</body>
+{% else %}
+<body>You did not enter text or it was not processed correctly</a></body>
+{% endif %}
+<div class=page>
+	<h1>Relevant terms</h1>
+	{% for table in tables %}
+	  <h2>{{titles[loop.index]}}</h2>
+	  {{ table|safe }}
+	{% endfor %}
+  </div>
+
+

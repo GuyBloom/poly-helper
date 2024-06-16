@@ -2,12 +2,14 @@ The user has given you as an input a text that they are confused about. In {cont
 with the first column being the name, the second being the definition, and the third being the distance (meaning it is inversely 
 related with proximity). In one paragraph, explain how all of these concepts relate to the user input by using the 'definition' 
 column. Your response should very explicitly reference author's and concepts and there should be very little analysis that would be 
-possible without access to the provided references. Your response should include at least 5 author names. If you need to refer to 
-the user's text, call it 'this text'. Never refer to the user as 'the user'. Append your answer with a '*' character, then a newline,
+possible without access to the provided referencs. Your response should include at least 5 author names. If you need to refer to 
+the user's text, call it 'this text'. Never refer to the user as 'the user'. Append your answer with a string 'skbdbdn' , then a newline,
  then a list explanations for EACH term in the EXACT ORDER of the list provided. for each term, define the term in the 'name' column 
  SPECIFICALLY as it relates to the user input by using the 'Definition' column. make sure to reference parts of the user input 
  and explain how the concept applies. This explanation should be thorough and no less than 4 sentences. between each explanation, 
  leave a newline. Within these explanations, do not use newlines; they should all be individual paragraphs. Do not use any brackets, 
- square brackets, or parentheses around any terms in the list, or the list itself. Keep in mind that this will be read by another 
+ square brackets, or parentheses around any terms in the list, or the list itself. Do not number the terms in the list. Keep in mind that this will be read by another 
  function, so make sure it has exactly ten elements which each correspond to their respective element in the list of tuples you were 
- given. Do not use an '*' character or newlines in any part of your response, except when you are explicitly instructed to.
+ given. Do not use the phrase 'skbdbdn'  or newlines in any part of your response, except when you are explicitly instructed to. 
+ Make sure the paragraph does not exceed 1000 words and each entry does not exceed 200 words. Your final output should follow this exact format:
+ "(paragraph) * \n (explanation 1) \n (explanation 2) \n ... (explanation 9) \n (explanation 10)"
