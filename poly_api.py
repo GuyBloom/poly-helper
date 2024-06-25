@@ -26,12 +26,7 @@ def enter_text():
         session['text_input'] = request.form.get('textarea')
         print(session['text_input'])
         return redirect(url_for('get_text'))
-    return """
-         <form method="POST"> 
-        <textarea name="textarea"></textarea> 
-        <input type="submit" value="Submit"> 
-    </form> 
-        """
+    return render_template('home.html')
 
 @app.route('/get_text', methods=('GET', 'POST'))
 def get_text(paragraph=None):
@@ -39,5 +34,6 @@ def get_text(paragraph=None):
     paragraph=answer
     data_table = pd.read_csv('results_table.csv')
     return render_template('results.html', paragraph=paragraph, tables = [data_table.to_html(classes='data')], titles=data_table.columns.values)
+
 
 

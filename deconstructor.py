@@ -83,24 +83,34 @@ def answer_question(
     try:
         if(debug):
             print('answer_question called')
-        response = client.chat.completions.create(
-            model=model,        
-            messages=[
-                {"role": "system", "content": (instructions + f"{context}") },
-                {"role": "user", "content": question},
-                
-            ],
-            temperature=0.7,
-            seed=123,
-            max_tokens=max_tokens,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            stop=stop_sequence,
-        )
-        answer = (str(response.choices[0].message.content).strip())
-        if(debug):
-            print("Raw answer: " + answer)
+        retry = True
+        retryCount = 0
+        answer = ''
+        while(retry):
+            if(debug and retryCount > 0):
+                print('Retry: ' + str(retryCount))
+            if(retryCount > 3):
+                raise Exception('Requires too many API calls')
+            response = client.chat.completions.create(
+                model=model,        
+                messages=[
+                    {"role": "system", "content": (instructions + f"{context}") },
+                    {"role": "user", "content": question},
+                    
+                ],
+                temperature=0.7,
+                seed=123,
+                max_tokens=max_tokens,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0,
+                stop=stop_sequence,
+            )
+            answer = (str(response.choices[0].message.content).strip())
+            if(debug):
+                print("Raw answer: " + answer)
+            retry = not (is_formatted(answer, 'skbdbdn'))
+            retryCount = retryCount + 1
         return (answer, context)
     except Exception as e:
         print(e)
@@ -161,4 +171,15 @@ def test_runner():
     print(final_raw[0])
     print(final_raw[1])
 
+
+def is_formatted(raw_output, separator):
+    init_list = raw_output.split(separator)
+    paragraph = init_list.pop(0)
+    exp_list = []
+    init_list[0] = init_list[0].strip()
+    inter_list=init_list[0].splitlines()
+    for x in inter_list:
+        if(x!=''):
+            exp_list.append(x)
+    return len(exp_list) == 10
 # test_runner()
