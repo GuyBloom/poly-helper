@@ -1,110 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
-    <style>
-        #textarea{
-            width: 800px;
-            height: 200px;
-            overflow: auto;
-            resize: none;
-        }
-        nav {
-            background-color: rgb(102, 66, 66);
-            color:black;
-            padding: 10px 20px;
-            position:fixed;
-            top:0;
-            z-index: 1000;
-            width: 100%;
-        }
-        nav ul{
-            list-style-type: none;
-            margin:0;
-            padding:0;
-            overflow:hidden;
-            text-align: left;
-        }
-        nav ul li{
-            display:inline-block;
-        }
-        nav ul li a{
-            display:block;
-            color:white;
-            text-decoration: none;
-            padding:10px 20px;
-        }
-        nav ul li a:hover{
-            color: orange;
-        }
-        body {
-            background-color: #C4B399;
-            display: flex;
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            height: 100vh; /* Full viewport height */
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-        .container {
-            text-align: center;
-        }
-        .form-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .image-container{
-            margin-right:20px;
-    
-        }
-        .textarea-container{
-            flex:1;
-            text-align: left;
-        }
-        .textarea-container form{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .textarea-container label{
-            display: block;
-            margin-bottom: 10px;
-        }
-        label {
-            margin-bottom: 10px; /* Space between label and textarea */
-        }
+{% extends "base.html" %}
 
-    </style>
-</head>
-<body>
-    <nav>
-        <ul>
-            <li><a href='#'>Home</a></li>
-            <li><a href='#'>About</a></li>
-            <li><a href='#'>Contact</a></li>
-        </ul>
+{% block title %}Home{% endblock %}
 
-    </nav>
-    <div class="container">
-        <div class="form-container">
-            <div class="image-container">
-                <img src="{{ url_for('static', filename='images/paul.jpg') }}" alt="Paul Logo" style="width:200px; height:200px;">
-            </div>
-            <div class="textarea-container">
-                <form method="POST">
-                    <label for="textarea">Enter your text</label>
-                    <textarea name="textarea" id="textarea"></textarea>
-                    <input type="submit" value="Ask Paul">
-                </form>
-            </div>
+{% block content %}
+    <h1 class="left-text">Welcome!</h1>
+    <p class="left-text">Professor Paul the Political Parrot is here to help! Simply enter whatever paragraph or section you're confused about and press the 'Ask Paul' button to get your results!</p>
+    <div class="form-container">
+        <div class="image-container">
+            <img src="{{ url_for('static', filename='images/paul.jpg') }}" alt="Paul Logo" style="width: 200px; height: 200px;">
+        </div>
+        <div class="textarea-container">
+            <form method="POST">
+                <label for="textarea">Enter your text</label>
+                <textarea name="textarea" id="textarea"></textarea>
+                <input type="submit" value="Ask Paul">
+            </form>
         </div>
     </div>
-</body>
-</html>
+{% endblock %}

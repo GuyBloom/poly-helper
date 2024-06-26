@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Test Results{% endblock %}
+
+
+{% block content %}
+<h1 class="left-text">Results!</h1>
+<div class="image-container">
+    <img src="{{ url_for('static', filename='images/paul.jpg') }}" alt="Paul Logo" style="width: 200px; height: 200px;">
+</div>
+<h2 class="left-text">Overall Summary:</h2>
+<p class = "left-text">	
+    {{ paragraph }}
+</p>
+
+{% for i in range(10) %}
+    <h2 class="left-text">{{names[i]}} </h2>
+    <p class = "left-text">Percent Match: {{matches[i]}}</p>
+    <p class = "left-text">Definition: {{expls[i]}}</p>
+
+
+{% endfor %}
+
+<!-- <div class=page>
+	<h1>Relevant terms</h1>
+	{% for table in tables %}
+	  <h2>{{titles[loop.index]}}</h2>
+	  {{ table|safe }}
+	{% endfor %}
+  </div> -->
+
+
+{% endblock %}
